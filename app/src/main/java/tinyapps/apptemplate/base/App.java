@@ -6,6 +6,7 @@ import com.joanzapata.iconify.Iconify;
 import com.joanzapata.iconify.fonts.FontAwesomeModule;
 import com.joanzapata.iconify.fonts.MaterialCommunityModule;
 import com.joanzapata.iconify.fonts.MaterialModule;
+import com.squareup.leakcanary.LeakCanary;
 
 import tinyapps.apptemplate.base.util.ContextUtil;
 
@@ -23,6 +24,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         ContextUtil.init(this);
+        LeakCanary.install(this);
         initIcontify();
     }
 }
