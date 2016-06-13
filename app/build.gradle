@@ -41,8 +41,7 @@ android {
                 storePassword debug_storePassword
                 keyAlias debug_keyAlias
                 keyPassword debug_keyPassword
-            }
-            catch (ex) {
+            } catch (ex) {
                 throw new InvalidUserDataException("You should define debug_storePassword, debug_keyPassword and debug_keyAlias in gradle.properties.")
             }
 
@@ -54,8 +53,7 @@ android {
                 storePassword release_storePassword
                 keyAlias release_keyAlias
                 keyPassword release_keyPassword
-            }
-            catch (ex) {
+            } catch (ex) {
                 throw new InvalidUserDataException("You should define release_storePassword, release_keyPassword and release_keyAlias in gradle.properties.")
             }
         }
@@ -103,17 +101,17 @@ android {
             minifyEnabled false
             buildConfigField 'boolean', 'DEBUG_LOGIN', 'true'
 
-            applicationVariants.all { variant ->
-                variant.outputs.each { output ->
-                    def File apk = output.outputFile
-                    def String newName = "${apk.name}-v${versionBuild}-t${formattedDate}.apk"
-                    output.outputFile = new File(apk.parent, newName)
-                }
+//            applicationVariants.all { variant ->
 //                variant.outputs.each { output ->
-//                    output.outputFile = new File(output.outputFile.parent, output.outputFile.name.replace("-debug", formattedDate + "_" + versionBuild));
+//                    def File apk = output.outputFile
+//                    def String newName = "${apk.name}-v${versionBuild}-t${formattedDate}.apk"
+//                    output.outputFile = new File(apk.parent, newName)
 //                }
-
-            }
+////                variant.outputs.each { output ->
+////                    output.outputFile = new File(output.outputFile.parent, output.outputFile.name.replace("-debug", formattedDate + "_" + versionBuild));
+////                }
+//
+//            }
 
         }
         release {
@@ -122,13 +120,13 @@ android {
             shrinkResources true
             buildConfigField 'boolean', 'DEBUG_LOGIN', 'false'
             proguardFiles 'proguard-rules-default.pro', 'proguard-rules.pro'
-            applicationVariants.all { variant ->
-                variant.outputs.each { output ->
-                    def File apk = output.outputFile
-                    def String newName = "${apk.name}-v${versionBuild}-t${formattedDate}.apk"
-                    output.outputFile = new File(apk.parent, newName)
-                }
-            }
+//            applicationVariants.all { variant ->
+//                variant.outputs.each { output ->
+//                    def File apk = output.outputFile
+//                    def String newName = "${apk.name}-v${versionBuild}-t${formattedDate}.apk"
+//                    output.outputFile = new File(apk.parent, newName)
+//                }
+//            }
         }
     }
 
@@ -182,14 +180,18 @@ dependencies {
     compile 'com.android.support:design:23.4.0'
     compile 'com.android.support:support-v4:23.4.0'
     compile 'com.android.support:recyclerview-v7:23.4.0'
+
     compile 'com.jakewharton:butterknife:7.0.1'
     compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.github.chrisbanes:PhotoView:1.2.6'
     compile 'com.squareup.retrofit2:retrofit:2.0.2'
     compile 'com.squareup:otto:1.3.8'
+
     compile 'com.joanzapata.iconify:android-iconify-fontawesome:2.2.2'
     compile 'com.joanzapata.iconify:android-iconify-material:2.2.2'
     compile 'com.joanzapata.iconify:android-iconify-material-community:2.2.2'
+
+
+    compile 'com.github.chrisbanes:PhotoView:1.2.6'
     compile 'com.squareup.phrase:phrase:1.1.0'
     compile 'com.github.lsjwzh.RecyclerViewPager:lib:v1.1.0'
     compile 'com.github.lsjwzh.RecyclerViewPager:tablayoutsupport:v1.1.0'
@@ -201,7 +203,6 @@ dependencies {
     compile 'com.appeaser.sublimepickerlibrary:sublimepickerlibrary:2.1.1'
     compile 'com.zhy:percent-support-extends:1.1.1'
     compile 'com.sothree.slidinguppanel:library:3.3.0'
-
     compile 'com.nineoldandroids:library:2.4.0'
     compile 'com.daimajia.easing:library:1.0.1@aar'
     compile 'com.daimajia.androidanimations:library:1.1.3@aar'
