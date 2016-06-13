@@ -82,3 +82,6 @@
 
 # Picasso
 -dontwarn com.squareup.okhttp.**
+
+# lamda
+-dontwarn java.lang.invoke.*

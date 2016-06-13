@@ -2,6 +2,8 @@ package tinyapps.apptemplate.demo;
 
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +31,14 @@ public class DemoListActivity extends BaseActivity {
         List<NameModel> names = new ArrayList<>();
 //        names.add(new NameModel());
         names.add(new NameExModel());
+
+        //demo lamda
+        rvContent.setOnClickListener(v -> {
+            Log.d("xxx", "xxx");
+            Log.d("xxx", "xxx");
+            Log.d("xxx", "xxx");
+        });
+
         //multi type
 /*        adapter = new BaseAdapter<>(new BaseViewHolderFactory<NameModel, NameEvent>() {
             @Override
