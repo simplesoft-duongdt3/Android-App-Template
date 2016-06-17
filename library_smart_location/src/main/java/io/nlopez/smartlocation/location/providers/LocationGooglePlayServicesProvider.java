@@ -1,7 +1,6 @@
 package io.nlopez.smartlocation.location.providers;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -20,30 +19,58 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 
-import io.nlopez.smartlocation.OnLocationUpdatedListener;
 import io.nlopez.smartlocation.location.LocationProvider;
 import io.nlopez.smartlocation.location.LocationStore;
-import io.nlopez.smartlocation.location.config.LocationParams;
 import io.nlopez.smartlocation.utils.GooglePlayServicesListener;
-import io.nlopez.smartlocation.utils.Logger;
 
 /**
  * Created by mrm on 20/12/14.
  */
 public class LocationGooglePlayServicesProvider extends LocationProvider implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, ResultCallback<Status> {
     private static final String GMS_ID = "GMS";
-
+    private final GooglePlayServicesListener googlePlayServicesListener;
     private GoogleApiClient client;
-    private Logger logger;
-    private OnLocationUpdatedListener listener;
     private boolean shouldStart = false;
     private boolean stopped = false;
     private LocationStore locationStore;
     private LocationRequest locationRequest;
-    private Context context;
-    private final GooglePlayServicesListener googlePlayServicesListener;
     private boolean checkLocationSettings;
     private boolean fulfilledCheckLocationSettings;
+    private ResultCallback<LocationSettingsResult> settingsResultCallback = new ResultCallback<LocationSettingsResult>() {
+        @Override
+        public void onResult(LocationSettingsResult locationSettingsResult) {
+            final Status status = locationSettingsResult.getStatus();
+            switch (status.getStatusCode()) {
+                case LocationSettingsStatusCodes.SUCCESS:
+                    logger.d("All location settings are satisfied.");
+                    fulfilledCheckLocationSettings = true;
+                    startUpdating(locationRequest);
+                    break;
+                case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                    logger.w("Location settings are not satisfied. Show the user a dialog to" +
+                            "upgrade location settings. You should hook into the Activity onActivityResult and call this provider onActivityResult method for continuing this call flow. ");
+
+                    if (context instanceof Activity) {
+                        try {
+                            // Show the dialog by calling startResolutionForResult(), and check the result
+                            // in onActivityResult().
+                            status.startResolutionForResult((Activity) context, REQUEST_CHECK_SETTINGS);
+                        } catch (IntentSender.SendIntentException e) {
+                            logger.i("PendingIntent unable to execute request.");
+                        }
+
+                    } else {
+                        logger.w("Provided context is not the context of an activity, therefore we cant launch the resolution activity.");
+                    }
+                    break;
+                case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                    logger.i("Location settings are inadequate, and cannot be fixed here. Dialog " +
+                            "not created.");
+                    stop();
+                    break;
+            }
+        }
+    };
 
     public LocationGooglePlayServicesProvider() {
         this(null);
@@ -56,12 +83,8 @@ public class LocationGooglePlayServicesProvider extends LocationProvider impleme
     }
 
     @Override
-    public void init(Context context, Logger logger) {
-        this.logger = logger;
-        this.context = context;
-
+    public void initRequestLocation() {
         locationStore = new LocationStore(context);
-
         if (!shouldStart) {
             this.client = new GoogleApiClient.Builder(context)
                     .addApi(LocationServices.API)
@@ -75,7 +98,7 @@ public class LocationGooglePlayServicesProvider extends LocationProvider impleme
         }
     }
 
-    private LocationRequest createRequest(LocationParams params, boolean singleUpdate) {
+    private LocationRequest createRequest() {
         LocationRequest request = LocationRequest.create()
                 .setFastestInterval(params.getInterval())
                 .setInterval(params.getInterval())
@@ -108,12 +131,11 @@ public class LocationGooglePlayServicesProvider extends LocationProvider impleme
     }
 
     @Override
-    public void start(OnLocationUpdatedListener listener, LocationParams params, boolean singleUpdate) {
-        this.listener = listener;
+    public void startDetectLocation() {
         if (listener == null) {
             logger.d("Listener is null, you sure about this?");
         }
-        locationRequest = createRequest(params, singleUpdate);
+        locationRequest = createRequest();
 
         if (client.isConnected()) {
             startUpdating(locationRequest);
@@ -135,7 +157,7 @@ public class LocationGooglePlayServicesProvider extends LocationProvider impleme
             return;
         }
         if (client.isConnected()) {
-            if (checkGpsPermision(context)) {
+            if (checkGpsPermission()) {
                 LocationServices.FusedLocationApi.requestLocationUpdates(client, request, this).setResultCallback(this);
             }
         } else {
@@ -149,7 +171,7 @@ public class LocationGooglePlayServicesProvider extends LocationProvider impleme
     }
 
     @Override
-    public void stop() {
+    public void stopDetectLocation() {
         logger.d("stop");
         if (client.isConnected()) {
             LocationServices.FusedLocationApi.removeLocationUpdates(client, this);
@@ -163,17 +185,14 @@ public class LocationGooglePlayServicesProvider extends LocationProvider impleme
     @Override
     public Location getLastLocation() {
         if (client != null && client.isConnected()) {
-            if (checkGpsPermision(context)) {
-                Location location =  LocationServices.FusedLocationApi.getLastLocation(client);
+            if (checkGpsPermission()) {
+                Location location = LocationServices.FusedLocationApi.getLastLocation(client);
                 if (location != null) {
                     return location;
                 }
             }
         }
-        if (locationStore != null) {
-            return locationStore.get(GMS_ID);
-        }
-        return null;
+        return getCacheLocationFromStore(GMS_ID);
     }
 
     @Override
@@ -205,16 +224,7 @@ public class LocationGooglePlayServicesProvider extends LocationProvider impleme
 
     @Override
     public void onLocationChanged(Location location) {
-        logger.d("onLocationChanged", location);
-
-        if (listener != null) {
-            listener.onLocationUpdated(location);
-        }
-
-        if (locationStore != null) {
-            logger.d("Stored in SharedPreferences");
-            locationStore.put(GMS_ID, location);
-        }
+        publishLocationReceive(location, GMS_ID);
     }
 
     @Override
@@ -293,41 +303,5 @@ public class LocationGooglePlayServicesProvider extends LocationProvider impleme
             startUpdating(locationRequest);
         }
     }
-
-    private ResultCallback<LocationSettingsResult> settingsResultCallback = new ResultCallback<LocationSettingsResult>() {
-        @Override
-        public void onResult(LocationSettingsResult locationSettingsResult) {
-            final Status status = locationSettingsResult.getStatus();
-            switch (status.getStatusCode()) {
-                case LocationSettingsStatusCodes.SUCCESS:
-                    logger.d("All location settings are satisfied.");
-                    fulfilledCheckLocationSettings = true;
-                    startUpdating(locationRequest);
-                    break;
-                case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                    logger.w("Location settings are not satisfied. Show the user a dialog to" +
-                            "upgrade location settings. You should hook into the Activity onActivityResult and call this provider onActivityResult method for continuing this call flow. ");
-
-                    if (context instanceof Activity) {
-                        try {
-                            // Show the dialog by calling startResolutionForResult(), and check the result
-                            // in onActivityResult().
-                            status.startResolutionForResult((Activity) context, REQUEST_CHECK_SETTINGS);
-                        } catch (IntentSender.SendIntentException e) {
-                            logger.i("PendingIntent unable to execute request.");
-                        }
-
-                    } else {
-                        logger.w("Provided context is not the context of an activity, therefore we cant launch the resolution activity.");
-                    }
-                    break;
-                case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                    logger.i("Location settings are inadequate, and cannot be fixed here. Dialog " +
-                            "not created.");
-                    stop();
-                    break;
-            }
-        }
-    };
 
 }

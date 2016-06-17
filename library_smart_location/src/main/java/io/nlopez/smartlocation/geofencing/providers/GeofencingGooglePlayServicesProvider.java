@@ -45,7 +45,7 @@ public class GeofencingGooglePlayServicesProvider implements GeofencingProvider,
 
     private final List<Geofence> geofencesToAdd = Collections.synchronizedList(new ArrayList<Geofence>());
     private final List<String> geofencesToRemove = Collections.synchronizedList(new ArrayList<String>());
-
+    private final GooglePlayServicesListener googlePlayServicesListener;
     private GoogleApiClient client;
     private Logger logger;
     private OnGeofencingTransitionListener listener;
@@ -53,17 +53,35 @@ public class GeofencingGooglePlayServicesProvider implements GeofencingProvider,
     private Context context;
     private PendingIntent pendingIntent;
     private boolean stopped = false;
-    private final GooglePlayServicesListener googlePlayServicesListener;
+    private BroadcastReceiver geofencingReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (BROADCAST_INTENT_ACTION.equals(intent.getAction()) && intent.hasExtra(GEOFENCES_EXTRA_ID)) {
+                logger.d("Received geofencing event");
+                final int transitionType = intent.getIntExtra(TRANSITION_EXTRA_ID, -1);
+                final List<String> geofencingIds = intent.getStringArrayListExtra(GEOFENCES_EXTRA_ID);
+                for (final String geofenceId : geofencingIds) {
+                    // Get GeofenceModel
+                    GeofenceModel geofenceModel = geofencingStore.get(geofenceId);
+                    if (geofenceModel != null) {
+                        listener.onGeofenceTransition(new TransitionGeofence(geofenceModel, transitionType));
+                    } else {
+                        logger.w("Tried to retrieve geofence " + geofenceId + " but it was not in the store");
+                    }
 
+                }
+            }
+        }
+    };
 
     public GeofencingGooglePlayServicesProvider() {
         this(null);
     }
 
+
     public GeofencingGooglePlayServicesProvider(GooglePlayServicesListener playServicesListener) {
         googlePlayServicesListener = playServicesListener;
     }
-
 
     @Override
     public void init(@NonNull Context context, Logger logger) {
@@ -206,26 +224,23 @@ public class GeofencingGooglePlayServicesProvider implements GeofencingProvider,
 
     }
 
-    private BroadcastReceiver geofencingReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (BROADCAST_INTENT_ACTION.equals(intent.getAction()) && intent.hasExtra(GEOFENCES_EXTRA_ID)) {
-                logger.d("Received geofencing event");
-                final int transitionType = intent.getIntExtra(TRANSITION_EXTRA_ID, -1);
-                final List<String> geofencingIds = intent.getStringArrayListExtra(GEOFENCES_EXTRA_ID);
-                for (final String geofenceId : geofencingIds) {
-                    // Get GeofenceModel
-                    GeofenceModel geofenceModel = geofencingStore.get(geofenceId);
-                    if (geofenceModel != null) {
-                        listener.onGeofenceTransition(new TransitionGeofence(geofenceModel, transitionType));
-                    } else {
-                        logger.w("Tried to retrieve geofence " + geofenceId + " but it was not in the store");
-                    }
-
-                }
+    @Override
+    public void onResult(@NonNull Status status) {
+        if (status.isSuccess()) {
+            logger.d("Geofencing update request successful");
+        } else if (status.hasResolution() && context instanceof Activity) {
+            logger.w(
+                    "Unable to register, but we can solve this - will startActivityForResult expecting result code " + RESULT_CODE + " (if received, please try again)");
+            try {
+                status.startResolutionForResult((Activity) context, RESULT_CODE);
+            } catch (IntentSender.SendIntentException e) {
+                logger.e(e, "problem with startResolutionForResult");
             }
+        } else {
+            // No recovery. Weep softly or inform the user.
+            logger.e("Registering failed: " + status.getStatusMessage());
         }
-    };
+    }
 
     public static class GeofencingService extends IntentService {
 
@@ -250,24 +265,6 @@ public class GeofencingGooglePlayServicesProvider implements GeofencingProvider,
                 geofenceIntent.putStringArrayListExtra(GEOFENCES_EXTRA_ID, geofencingIds);
                 sendBroadcast(geofenceIntent);
             }
-        }
-    }
-
-    @Override
-    public void onResult(@NonNull Status status) {
-        if (status.isSuccess()) {
-            logger.d("Geofencing update request successful");
-        } else if (status.hasResolution() && context instanceof Activity) {
-            logger.w(
-                    "Unable to register, but we can solve this - will startActivityForResult expecting result code " + RESULT_CODE + " (if received, please try again)");
-            try {
-                status.startResolutionForResult((Activity) context, RESULT_CODE);
-            } catch (IntentSender.SendIntentException e) {
-                logger.e(e, "problem with startResolutionForResult");
-            }
-        } else {
-            // No recovery. Weep softly or inform the user.
-            logger.e("Registering failed: " + status.getStatusMessage());
         }
     }
 

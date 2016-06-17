@@ -9,6 +9,15 @@ import android.os.Parcelable;
  * Wrapper for addresses for when what we really want most of the time is the Location class instead (ie in a geocoding operation).
  */
 public class LocationAddress implements Parcelable {
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+        public LocationAddress createFromParcel(Parcel in) {
+            return new LocationAddress(in);
+        }
+
+        public LocationAddress[] newArray(int size) {
+            return new LocationAddress[size];
+        }
+    };
     private Location location;
     private Address address;
 
@@ -50,14 +59,4 @@ public class LocationAddress implements Parcelable {
         dest.writeParcelable(this.location, flags);
         dest.writeParcelable(this.address, flags);
     }
-
-    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
-        public LocationAddress createFromParcel(Parcel in) {
-            return new LocationAddress(in);
-        }
-
-        public LocationAddress[] newArray(int size) {
-            return new LocationAddress[size];
-        }
-    };
 }

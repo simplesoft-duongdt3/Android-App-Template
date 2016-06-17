@@ -42,6 +42,32 @@ public class AndroidGeocodingProvider implements GeocodingProvider {
     private HashMap<Location, Integer> fromLocationList;
     private Context context;
     private Logger logger;
+    private BroadcastReceiver directReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (BROADCAST_DIRECT_GEOCODING_ACTION.equals(intent.getAction())) {
+                logger.d("sending new direct geocoding response");
+                if (geocodingListener != null) {
+                    final String name = intent.getStringExtra(NAME_ID);
+                    final ArrayList<LocationAddress> results = intent.getParcelableArrayListExtra(RESULT_ID);
+                    geocodingListener.onLocationResolved(name, results);
+                }
+            }
+        }
+    };
+    private BroadcastReceiver reverseReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (BROADCAST_REVERSE_GEOCODING_ACTION.equals(intent.getAction())) {
+                logger.d("sending new reverse geocoding response");
+                if (reverseGeocodingListener != null) {
+                    final Location location = intent.getParcelableExtra(LOCATION_ID);
+                    final ArrayList<Address> results = (ArrayList<Address>) intent.getSerializableExtra(RESULT_ID);
+                    reverseGeocodingListener.onAddressResolved(location, results);
+                }
+            }
+        }
+    };
 
     public AndroidGeocodingProvider() {
         this(Locale.getDefault());
@@ -121,35 +147,6 @@ public class AndroidGeocodingProvider implements GeocodingProvider {
             logger.d("Silenced 'receiver not registered' stuff (calling stop more times than necessary did this)");
         }
     }
-
-    private BroadcastReceiver directReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (BROADCAST_DIRECT_GEOCODING_ACTION.equals(intent.getAction())) {
-                logger.d("sending new direct geocoding response");
-                if (geocodingListener != null) {
-                    final String name = intent.getStringExtra(NAME_ID);
-                    final ArrayList<LocationAddress> results = intent.getParcelableArrayListExtra(RESULT_ID);
-                    geocodingListener.onLocationResolved(name, results);
-                }
-            }
-        }
-    };
-
-    private BroadcastReceiver reverseReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (BROADCAST_REVERSE_GEOCODING_ACTION.equals(intent.getAction())) {
-                logger.d("sending new reverse geocoding response");
-                if (reverseGeocodingListener != null) {
-                    final Location location = intent.getParcelableExtra(LOCATION_ID);
-                    final ArrayList<Address> results = (ArrayList<Address>) intent.getSerializableExtra(RESULT_ID);
-                    reverseGeocodingListener.onAddressResolved(location, results);
-                }
-            }
-        }
-    };
-
 
     public static class AndroidGeocodingService extends IntentService {
 

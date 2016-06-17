@@ -5,28 +5,18 @@ import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 
-import io.nlopez.smartlocation.OnLocationUpdatedListener;
 import io.nlopez.smartlocation.location.LocationProvider;
-import io.nlopez.smartlocation.location.config.LocationParams;
 import io.nlopez.smartlocation.utils.GooglePlayServicesListener;
-import io.nlopez.smartlocation.utils.Logger;
 
 /**
  * Created by mrm on 20/12/14.
  */
 public class LocationGooglePlayServicesWithFallbackProvider extends LocationProvider implements GooglePlayServicesListener {
-    private Logger logger;
-    private OnLocationUpdatedListener listener;
     private boolean shouldStart = false;
-    private Context context;
-    private LocationParams params;
-    private boolean singleUpdate = false;
 
     private LocationProvider provider;
 
@@ -41,26 +31,19 @@ public class LocationGooglePlayServicesWithFallbackProvider extends LocationProv
     }
 
     @Override
-    public void init(Context context, Logger logger) {
-        this.logger = logger;
-        this.context = context;
-
+    public void initRequestLocation() {
         logger.d("Currently selected provider = " + provider.getClass().getSimpleName());
-
         provider.init(context, logger);
     }
 
     @Override
-    public void start(OnLocationUpdatedListener listener, LocationParams params, boolean singleUpdate) {
+    public void startDetectLocation() {
         shouldStart = true;
-        this.listener = listener;
-        this.params = params;
-        this.singleUpdate = singleUpdate;
         provider.start(listener, params, singleUpdate);
     }
 
     @Override
-    public void stop() {
+    public void stopDetectLocation() {
         provider.stop();
         shouldStart = false;
     }

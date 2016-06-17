@@ -11,42 +11,24 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 
-import io.nlopez.smartlocation.OnLocationUpdatedListener;
 import io.nlopez.smartlocation.location.LocationProvider;
-import io.nlopez.smartlocation.location.LocationStore;
 import io.nlopez.smartlocation.location.config.LocationAccuracy;
 import io.nlopez.smartlocation.location.config.LocationParams;
-import io.nlopez.smartlocation.utils.Logger;
 
 /**
  * Created by nacho on 12/23/14.
  */
 public class LocationManagerProvider extends LocationProvider implements LocationListener {
     private static final String LOCATIONMANAGERPROVIDER_ID = "LMP";
-
     private LocationManager locationManager;
-    private OnLocationUpdatedListener listener;
-    private LocationParams params;
-    private boolean singleUpdate;
-    private LocationStore locationStore;
-    private Logger logger;
-    private Context context;
 
     @Override
-    public void init(Context context, Logger logger) {
-        this.context = context;
+    public void initRequestLocation() {
         this.locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-
-        this.logger = logger;
-
-        locationStore = new LocationStore(context);
     }
 
     @Override
-    public void start(OnLocationUpdatedListener listener, LocationParams params, boolean singleUpdate) {
-        this.listener = listener;
-        this.params = params;
-        this.singleUpdate = singleUpdate;
+    public void startDetectLocation() {
         if (listener == null) {
             logger.d("Listener is null, you sure about this?");
         }
@@ -55,29 +37,26 @@ public class LocationManagerProvider extends LocationProvider implements Locatio
 
     private void start() {
         Criteria criteria = getProvider(params);
-        if (singleUpdate) {
-            if (checkGpsPermision(context)) {
+        if (checkGpsPermission()) {
+            if (singleUpdate) {
                 locationManager.requestSingleUpdate(criteria, this, Looper.getMainLooper());
-            }
-        } else {
-            if (checkGpsPermision(context)) {
+            } else {
                 locationManager.requestLocationUpdates(params.getInterval(), params.getDistance(), criteria, this, Looper.getMainLooper());
             }
         }
     }
 
     @Override
-    public void stop() {
-        if (checkGpsPermision(context)) {
+    public void stopDetectLocation() {
+        if (checkGpsPermission()) {
             locationManager.removeUpdates(this);
         }
     }
 
     @Override
     public Location getLastLocation() {
-
         if (locationManager != null) {
-            if (checkGpsPermision(context)) {
+            if (checkGpsPermission()) {
                 Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 if (location != null) {
                     return location;
@@ -85,12 +64,7 @@ public class LocationManagerProvider extends LocationProvider implements Locatio
             }
         }
 
-        Location location = locationStore.get(LOCATIONMANAGERPROVIDER_ID);
-        if (location != null) {
-            return location;
-        }
-
-        return null;
+        return getCacheLocationFromStore(LOCATIONMANAGERPROVIDER_ID);
     }
 
     @Override
@@ -110,58 +84,45 @@ public class LocationManagerProvider extends LocationProvider implements Locatio
         final Criteria criteria = new Criteria();
         switch (accuracy) {
             case HIGH:
-                criteria.setAccuracy(Criteria.ACCURACY_FINE);
-                criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
-                criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
-                criteria.setBearingAccuracy(Criteria.ACCURACY_HIGH);
-                criteria.setSpeedAccuracy(Criteria.ACCURACY_HIGH);
-                criteria.setPowerRequirement(Criteria.POWER_HIGH);
+                changeCriteria(criteria, Criteria.ACCURACY_FINE, Criteria.ACCURACY_HIGH, Criteria.POWER_HIGH);
                 break;
             case MEDIUM:
-                criteria.setAccuracy(Criteria.ACCURACY_COARSE);
-                criteria.setHorizontalAccuracy(Criteria.ACCURACY_MEDIUM);
-                criteria.setVerticalAccuracy(Criteria.ACCURACY_MEDIUM);
-                criteria.setBearingAccuracy(Criteria.ACCURACY_MEDIUM);
-                criteria.setSpeedAccuracy(Criteria.ACCURACY_MEDIUM);
-                criteria.setPowerRequirement(Criteria.POWER_MEDIUM);
+                changeCriteria(criteria, Criteria.ACCURACY_COARSE, Criteria.ACCURACY_MEDIUM, Criteria.POWER_MEDIUM);
                 break;
             case LOW:
             case LOWEST:
             default:
-                criteria.setAccuracy(Criteria.ACCURACY_COARSE);
-                criteria.setHorizontalAccuracy(Criteria.ACCURACY_LOW);
-                criteria.setVerticalAccuracy(Criteria.ACCURACY_LOW);
-                criteria.setBearingAccuracy(Criteria.ACCURACY_LOW);
-                criteria.setSpeedAccuracy(Criteria.ACCURACY_LOW);
-                criteria.setPowerRequirement(Criteria.POWER_LOW);
+                changeCriteria(criteria, Criteria.ACCURACY_COARSE, Criteria.ACCURACY_LOW, Criteria.POWER_LOW);
         }
         return criteria;
     }
 
+    private void changeCriteria(Criteria criteria, int accuracy, int accuracyMinor, int power) {
+        criteria.setAccuracy(accuracy);
+        criteria.setHorizontalAccuracy(accuracyMinor);
+        criteria.setVerticalAccuracy(accuracyMinor);
+        criteria.setBearingAccuracy(accuracyMinor);
+        criteria.setSpeedAccuracy(accuracyMinor);
+        criteria.setPowerRequirement(power);
+    }
+
     @Override
     public void onLocationChanged(Location location) {
-        logger.d("onLocationChanged", location);
-        if (listener != null) {
-            listener.onLocationUpdated(location);
-        }
-        if (locationStore != null) {
-            logger.d("Stored in SharedPreferences");
-            locationStore.put(LOCATIONMANAGERPROVIDER_ID, location);
-        }
+        publishLocationReceive(location, LOCATIONMANAGERPROVIDER_ID);
     }
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
-
+        //do nothing
     }
 
     @Override
     public void onProviderEnabled(String provider) {
-
+        //do nothing
     }
 
     @Override
     public void onProviderDisabled(String provider) {
-
+        //do nothing
     }
 }
