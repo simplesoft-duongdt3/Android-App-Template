@@ -1,1 +1,1 @@
-include ':app', ':lib_anonation', ':lib_compiler'
+include ':app', ':lib_anonation', ':lib_compiler', ':library_smart_location'

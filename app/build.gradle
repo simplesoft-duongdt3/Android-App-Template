@@ -160,6 +160,7 @@ dexcount {
 }
 
 dependencies {
+    compile project(":library_smart_location")
     compile project(':lib_anonation')
     apt project(':lib_compiler')
     compile 'frankiesardo:icepick:3.2.0'
@@ -190,7 +191,6 @@ dependencies {
     compile 'com.joanzapata.iconify:android-iconify-fontawesome:2.2.2'
     compile 'com.joanzapata.iconify:android-iconify-material:2.2.2'
     compile 'com.joanzapata.iconify:android-iconify-material-community:2.2.2'
-
 
     compile 'com.github.chrisbanes:PhotoView:1.2.6'
     compile 'com.squareup.phrase:phrase:1.1.0'

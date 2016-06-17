@@ -3,17 +3,19 @@ package tinyapps.apptemplate.demo;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
+import io.nlopez.smartlocation.OnLocationUpdatedListener;
+import io.nlopez.smartlocation.SmartLocation;
+import io.nlopez.smartlocation.location.providers.LocationGooglePlayServicesWithFallbackProvider;
 import tinyapps.apptemplate.R;
 import tinyapps.apptemplate.base.activity.BaseActivity;
 import tinyapps.apptemplate.base.rv.BaseAdapter;
 
-public class DemoListActivity extends BaseActivity {
+public class DemoListActivity extends BaseActivity implements OnLocationUpdatedListener {
     @Bind(R.id.rvContent)
     RecyclerView rvContent;
     BaseAdapter<NameModel, NameEvent> adapter;
@@ -67,4 +69,5 @@ public class DemoListActivity extends BaseActivity {
 
         adapter.replaceAll(names);
     }
+
 }

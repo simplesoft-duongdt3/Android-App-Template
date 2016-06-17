@@ -1,12 +1,15 @@
 package tinyapps.apptemplate.base.activity;
 
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 
 import butterknife.ButterKnife;
+import io.nlopez.smartlocation.OnLocationUpdatedListener;
 
 public abstract class BaseActivity extends AppCompatActivity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -15,7 +18,6 @@ public abstract class BaseActivity extends AppCompatActivity {
             setContentView(getContentViewId());
         }
         initAfterSetContentView();
-
         ButterKnife.bind(this);
         initView();
         //initFragment();
@@ -23,10 +25,12 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     //protected abstract void initFragment();
 
+    @CallSuper
     protected void initAfterSetContentView() {
 
     }
 
+    @CallSuper
     protected void initBeforeSetContentView() {
 
     }
@@ -44,5 +48,4 @@ public abstract class BaseActivity extends AppCompatActivity {
     void replaceFragment(int contentId, Fragment fragment) {
         getSupportFragmentManager().beginTransaction().replace(contentId, fragment).commit();
     }
-
 }
