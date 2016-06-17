@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.location.Location;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import io.nlopez.smartlocation.OnLocationUpdatedListener;
 import io.nlopez.smartlocation.SmartLocation;
@@ -58,7 +59,7 @@ public abstract class BaseGpsSupportActivity extends BaseActivity implements OnL
 
     @Override
     public void onLocationUpdated(Location location) {
-
+        Log.d("BaseGpsSupportActivity", "onLocationUpdated " + location);
     }
 
     private void initGps() {

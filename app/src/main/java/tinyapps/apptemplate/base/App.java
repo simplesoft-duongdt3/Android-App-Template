@@ -1,6 +1,7 @@
 package tinyapps.apptemplate.base;
 
 import android.app.Application;
+import android.content.Intent;
 
 import com.joanzapata.iconify.Iconify;
 import com.joanzapata.iconify.fonts.FontAwesomeModule;
@@ -8,6 +9,7 @@ import com.joanzapata.iconify.fonts.MaterialCommunityModule;
 import com.joanzapata.iconify.fonts.MaterialModule;
 import com.squareup.leakcanary.LeakCanary;
 
+import tinyapps.apptemplate.base.service.LocationService;
 import tinyapps.apptemplate.base.util.ContextUtil;
 
 /**
@@ -26,5 +28,12 @@ public class App extends Application {
         ContextUtil.init(this);
         LeakCanary.install(this);
         initIcontify();
+
+        startLocationService();
+    }
+
+    private void startLocationService() {
+        Intent intent = new Intent(this, LocationService.class);
+        startService(intent);
     }
 }

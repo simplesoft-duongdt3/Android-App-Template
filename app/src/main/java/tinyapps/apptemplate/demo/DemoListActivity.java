@@ -15,7 +15,7 @@ import tinyapps.apptemplate.R;
 import tinyapps.apptemplate.base.activity.BaseActivity;
 import tinyapps.apptemplate.base.rv.BaseAdapter;
 
-public class DemoListActivity extends BaseActivity implements OnLocationUpdatedListener {
+public class DemoListActivity extends BaseActivity {
     @Bind(R.id.rvContent)
     RecyclerView rvContent;
     BaseAdapter<NameModel, NameEvent> adapter;
