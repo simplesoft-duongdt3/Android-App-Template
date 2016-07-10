@@ -139,7 +139,7 @@ android {
         checkReleaseBuilds true
         abortOnError false
         setHtmlReport(true)
-        setHtmlOutput(new File("D:\\AndroidStudio\\Template\\BuildReport\\Lint\\report.html"))
+        //setHtmlOutput(new File("D:\\AndroidStudio\\Template\\BuildReport\\Lint\\report.html"))
         disable 'InvalidPackage'
     }
 
