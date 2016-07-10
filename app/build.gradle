@@ -37,24 +37,24 @@ android {
     signingConfigs {
         debug {
             try {
-                storeFile file('tinyappsdebug.key.jks')
+                storeFile file(debug_file_key)
                 storePassword debug_storePassword
                 keyAlias debug_keyAlias
                 keyPassword debug_keyPassword
             } catch (ex) {
-                throw new InvalidUserDataException("You should define debug_storePassword, debug_keyPassword and debug_keyAlias in gradle.properties.")
+                throw new InvalidUserDataException("You should define debug_storePassword, debug_file_key, debug_keyPassword and debug_keyAlias in gradle.properties.")
             }
 
         }
 
         release {
             try {
-                storeFile file('tinyappsrelease.key.jks')
+                storeFile file(release_file_key)
                 storePassword release_storePassword
                 keyAlias release_keyAlias
                 keyPassword release_keyPassword
             } catch (ex) {
-                throw new InvalidUserDataException("You should define release_storePassword, release_keyPassword and release_keyAlias in gradle.properties.")
+                throw new InvalidUserDataException("You should define release_storePassword, release_keyPassword, release_file_key and release_keyAlias in gradle.properties.")
             }
         }
     }

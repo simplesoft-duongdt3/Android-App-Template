@@ -24,4 +24,8 @@ public class DemoGpsActivity extends BaseGpsSupportActivity {
     }
 
 
+    @Override
+    public void onMockLocationDetect() {
+
+    }
 }

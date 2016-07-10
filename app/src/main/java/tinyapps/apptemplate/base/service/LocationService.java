@@ -57,4 +57,9 @@ public class LocationService extends Service implements OnLocationUpdatedListene
     public void onLocationUpdated(Location location) {
         Log.d("LocationService", "onLocationUpdated " + location);
     }
+
+    @Override
+    public void onMockLocationDetect() {
+
+    }
 }
